@@ -46,7 +46,7 @@ export default function AdminDashboard() {
     } else {
       // Get media count for each post
       const postsWithCount = await Promise.all(
-        (data || []).map(async (post) => {
+        (data || []).map(async (post: Post) => {
           const { count } = await supabase
             .from('media')
             .select('*', { count: 'exact', head: true })

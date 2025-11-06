@@ -2,6 +2,7 @@
 
 import { useState, FormEvent, ChangeEvent } from 'react'
 import { createBrowserClient } from '@/lib/supabase'
+import type { Database } from '@/lib/supabase'
 
 interface FileWithPreview extends File {
   preview?: string
@@ -66,16 +67,18 @@ export default function AdminUploader() {
       }
 
       // Create post
-      const { data: post, error: postError } = await supabase
-        .from('posts')
-        .insert({
-          title: title || null,
-          description: description || null,
-          lat: latNum,
-          lng: lngNum,
-          is_secret: isSecret,
-          admin_id: user.id,
-        })
+      const postInsert: Database['public']['Tables']['posts']['Insert'] = {
+        title: title || null,
+        description: description || null,
+        lat: latNum,
+        lng: lngNum,
+        is_secret: isSecret,
+        admin_id: user.id,
+      }
+      
+      const { data: post, error: postError } = await (supabase
+        .from('posts') as any)
+        .insert(postInsert)
         .select()
         .single()
 
@@ -113,22 +116,22 @@ export default function AdminUploader() {
         }
 
         // Create media record
-        const { error: mediaError } = await supabase.from('media').insert({
+        const { error: mediaError } = await (supabase.from('media') as any).insert({
           post_id: post.id,
           type: mediaType,
           url: publicUrl,
-        })
+        } as Database['public']['Tables']['media']['Insert'])
 
         if (mediaError) throw mediaError
       }
 
       // Handle text content
       if (textContent.trim()) {
-        const { error: textError } = await supabase.from('media').insert({
+        const { error: textError } = await (supabase.from('media') as any).insert({
           post_id: post.id,
           type: 'text',
           url: textContent.trim(),
-        })
+        } as Database['public']['Tables']['media']['Insert'])
 
         if (textError) throw textError
       }
