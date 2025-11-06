@@ -1,4 +1,4 @@
-import { createServerSupabaseClient } from './supabase'
+import { createServerSupabaseClient } from './supabase-server'
 
 const ADMIN_UUID = 'df74d913-f481-48d9-b23d-d9469fb346e2'
 

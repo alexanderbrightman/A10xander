@@ -1,5 +1,6 @@
 import { createServerClient, type CookieOptions } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
+import type { Database } from './lib/database.types'
 
 const ADMIN_UUID = 'df74d913-f481-48d9-b23d-d9469fb346e2'
 
@@ -21,7 +22,7 @@ export async function middleware(request: NextRequest) {
         return NextResponse.redirect(new URL('/', request.url))
       }
 
-      const supabase = createServerClient(supabaseUrl, supabaseAnonKey, {
+      const supabase = createServerClient<Database>(supabaseUrl, supabaseAnonKey, {
         cookies: {
           get(name: string) {
             return request.cookies.get(name)?.value

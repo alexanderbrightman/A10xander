@@ -1,10 +1,20 @@
 'use client'
 
 import { useState } from 'react'
-import GlobeComponent from '@/components/Globe'
+import dynamic from 'next/dynamic'
 import PostModal from '@/components/PostModal'
 import PasswordPrompt from '@/components/PasswordPrompt'
 import type { Database } from '@/lib/supabase'
+
+// Dynamically import Globe to avoid SSR issues with Three.js
+const GlobeComponent = dynamic(() => import('@/components/Globe'), {
+  ssr: false,
+  loading: () => (
+    <div className="flex items-center justify-center w-full h-full">
+      <div className="text-cosmic-green animate-pulse">Loading globe...</div>
+    </div>
+  ),
+})
 
 type Post = Database['public']['Tables']['posts']['Row']
 

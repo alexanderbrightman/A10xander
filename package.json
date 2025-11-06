@@ -18,7 +18,7 @@
     "react": "^18.3.0",
     "react-dom": "^18.3.0",
     "react-globe.gl": "^2.28.0",
-    "three": "^0.160.0"
+    "three": "^0.160.1"
   },
   "devDependencies": {
     "@types/node": "^20.11.0",
