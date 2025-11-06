@@ -1,0 +1,83 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --cosmic-dark: #0a0a0f;
+  --cosmic-darker: #050508;
+  --cosmic-blue: #1a1a2e;
+  --cosmic-green: #00ff88;
+}
+
+* {
+  box-sizing: border-box;
+  padding: 0;
+  margin: 0;
+}
+
+html,
+body {
+  max-width: 100vw;
+  overflow-x: hidden;
+  background: var(--cosmic-darker);
+  color: #fff;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+    sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Cosmic starfield background */
+.cosmic-bg {
+  background: radial-gradient(ellipse at bottom, #1b2735 0%, #090a0f 100%);
+  position: relative;
+  overflow: hidden;
+}
+
+.cosmic-bg::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-image: 
+    radial-gradient(2px 2px at 20% 30%, white, rgba(0,0,0,0)),
+    radial-gradient(2px 2px at 60% 70%, white, rgba(0,0,0,0)),
+    radial-gradient(1px 1px at 50% 50%, white, rgba(0,0,0,0)),
+    radial-gradient(1px 1px at 80% 10%, white, rgba(0,0,0,0)),
+    radial-gradient(2px 2px at 90% 40%, white, rgba(0,0,0,0)),
+    radial-gradient(1px 1px at 33% 60%, white, rgba(0,0,0,0)),
+    radial-gradient(1px 1px at 66% 20%, white, rgba(0,0,0,0));
+  background-repeat: repeat;
+  background-size: 200% 200%;
+  animation: starfield 20s linear infinite;
+  opacity: 0.6;
+  pointer-events: none;
+}
+
+@keyframes starfield {
+  0% {
+    transform: translate(0, 0);
+  }
+  100% {
+    transform: translate(-50%, -50%);
+  }
+}
+
+/* Glow effects */
+.glow-green {
+  box-shadow: 0 0 10px rgba(0, 255, 136, 0.5),
+              0 0 20px rgba(0, 255, 136, 0.3),
+              0 0 30px rgba(0, 255, 136, 0.1);
+}
+
+/* Smooth transitions */
+* {
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
