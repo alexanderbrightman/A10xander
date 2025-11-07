@@ -70,15 +70,27 @@ export async function middleware(request: NextRequest) {
       } = await supabase.auth.getUser()
 
       if (error) {
-        console.error('Auth error:', error)
+        console.error('Middleware auth error:', error)
         return NextResponse.redirect(new URL('/', request.url))
+      }
+
+      // Log for debugging
+      if (user) {
+        console.log('Middleware - User ID:', user.id)
+        console.log('Middleware - Expected admin ID:', ADMIN_UUID)
+        console.log('Middleware - UUIDs match:', user.id === ADMIN_UUID)
+      } else {
+        console.log('Middleware - No user found')
       }
 
       // Check if user is the admin
       if (!user || user.id !== ADMIN_UUID) {
+        console.log('Middleware - Unauthorized access attempt, redirecting to home')
         // Redirect to home if not authorized
         return NextResponse.redirect(new URL('/', request.url))
       }
+      
+      console.log('Middleware - Admin access granted')
     } catch (error) {
       console.error('Middleware error:', error)
       return NextResponse.redirect(new URL('/', request.url))

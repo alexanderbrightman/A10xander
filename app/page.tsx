@@ -30,6 +30,7 @@ export default function Home() {
   }
 
   const handleAuthSuccess = () => {
+    setIsAuthModalOpen(false)
     router.push('/admin')
   }
 
@@ -37,7 +38,10 @@ export default function Home() {
     <div className="relative w-screen h-screen cosmic-bg overflow-hidden">
       <SecretPatternHandler />
       
-      <GlobeComponent onPostClick={handlePostClick} />
+      {/* Globe container - positioned absolutely to overlay the starfield */}
+      <div className="absolute inset-0 z-0">
+        <GlobeComponent onPostClick={handlePostClick} />
+      </div>
 
       {selectedPost && (
         <PostModal post={selectedPost} onClose={() => setSelectedPost(null)} />

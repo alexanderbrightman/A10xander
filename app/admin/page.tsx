@@ -17,16 +17,49 @@ export default function AdminDashboard() {
 
   useEffect(() => {
     async function checkAuth() {
+      console.log('Admin page - Starting auth check')
+      console.log('Admin page - Current URL:', window.location.href)
+      
       const supabase = createBrowserClient()
+      
+      // First check session
+      const { data: sessionData, error: sessionError } = await supabase.auth.getSession()
+      console.log('Admin page - Session check:', { session: sessionData?.session?.user?.id, error: sessionError })
+      
       const {
         data: { user },
+        error,
       } = await supabase.auth.getUser()
 
-      if (!user || user.id !== 'df74d913-f481-48d9-b23d-d9469fb346e2') {
+      console.log('Admin page - Auth check:', { user: user?.id, error })
+
+      if (error) {
+        console.error('Admin page - Auth error:', error)
+        console.log('Admin page - Redirecting to home due to auth error')
         router.push('/')
         return
       }
 
+      if (!user) {
+        console.log('Admin page - No user found')
+        console.log('Admin page - Redirecting to home due to no user')
+        router.push('/')
+        return
+      }
+
+      console.log('Admin page - User ID:', user.id)
+      console.log('Admin page - Expected admin ID:', 'df74d913-f481-48d9-b23d-d9469fb346e2')
+      console.log('Admin page - UUIDs match:', user.id === 'df74d913-f481-48d9-b23d-d9469fb346e2')
+
+      if (user.id !== 'df74d913-f481-48d9-b23d-d9469fb346e2') {
+        console.error('Admin page - Unauthorized user:', user.id)
+        alert(`Unauthorized. Your user ID (${user.id}) does not match the admin ID. Please check your Supabase account UUID.`)
+        console.log('Admin page - Redirecting to home due to UUID mismatch')
+        router.push('/')
+        return
+      }
+
+      console.log('Admin page - Authorization successful, loading dashboard')
       setIsAuthorized(true)
       await loadPosts()
     }

@@ -15,22 +15,34 @@ export default function SecretPatternHandler() {
   const resetTimeoutRef = useRef<NodeJS.Timeout | null>(null)
 
   useEffect(() => {
-    const handleTap = (e: MouseEvent | TouchEvent) => {
-      // Only detect taps on background, not on interactive elements
+    const handleClick = (e: MouseEvent) => {
+      // Only detect clicks on background, not on interactive elements
       const target = e.target as HTMLElement
+      
+      // Ignore clicks on interactive elements
       if (
         target.closest('canvas') ||
         target.closest('button') ||
         target.closest('a') ||
-        target.closest('[role="button"]')
+        target.closest('[role="button"]') ||
+        target.closest('input') ||
+        target.closest('textarea') ||
+        target.closest('div[class*="modal"]') ||
+        target.closest('div[class*="Modal"]')
       ) {
+        return
+      }
+
+      // Only process clicks on the background div (cosmic-bg)
+      if (!target.classList.contains('cosmic-bg') && !target.closest('.cosmic-bg')) {
         return
       }
 
       const now = Date.now()
       const timeSinceLastTap = now - lastTapTime.current
 
-      // Determine if this is a dot or dash
+      // Determine if this is a dot or dash based on time since last tap
+      // Pattern: . - . . means: quick, pause, quick, quick
       let tapType: 'dot' | 'dash'
       if (timeSinceLastTap === 0 || timeSinceLastTap < DOT_THRESHOLD) {
         tapType = 'dot'
@@ -81,12 +93,34 @@ export default function SecretPatternHandler() {
     }
 
     // Add event listeners
-    window.addEventListener('click', handleTap)
-    window.addEventListener('touchstart', handleTap)
+    document.addEventListener('click', handleClick, true) // Use capture phase
+    
+    // Also handle touch events
+    const handleTouchEnd = (e: TouchEvent) => {
+      const target = e.target as HTMLElement
+      if (
+        target.closest('canvas') ||
+        target.closest('button') ||
+        target.closest('a') ||
+        target.closest('[role="button"]') ||
+        target.closest('input') ||
+        target.closest('textarea') ||
+        target.closest('div[class*="modal"]') ||
+        target.closest('div[class*="Modal"]')
+      ) {
+        return
+      }
+      if (!target.classList.contains('cosmic-bg') && !target.closest('.cosmic-bg')) {
+        return
+      }
+      handleClick(e as any) // Reuse the same logic
+    }
+    
+    document.addEventListener('touchend', handleTouchEnd, true)
 
     return () => {
-      window.removeEventListener('click', handleTap)
-      window.removeEventListener('touchstart', handleTap)
+      document.removeEventListener('click', handleClick, true)
+      document.removeEventListener('touchend', handleTouchEnd, true)
       if (resetTimeoutRef.current) {
         clearTimeout(resetTimeoutRef.current)
       }
