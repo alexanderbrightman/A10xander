@@ -16,7 +16,7 @@ export default function PasswordPrompt({ onSuccess }: PasswordPromptProps) {
     setIsLoading(true)
     setError('')
 
-    const secretPassword = process.env.NEXT_PUBLIC_SECRET_PASSWORD
+    const secretPassword = process.env.NEXT_PUBLIC_PRIVATE_PAGE_PASSCODE
 
     if (!secretPassword) {
       setError('Secret password not configured')
@@ -34,19 +34,13 @@ export default function PasswordPrompt({ onSuccess }: PasswordPromptProps) {
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center cosmic-bg">
-      <div className="w-full max-w-md p-8 bg-cosmic-blue rounded-lg border border-cosmic-green/20 shadow-2xl">
-        <h2 className="text-2xl font-bold text-cosmic-green mb-6 text-center">
-          Secret Access
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-white dark:bg-black">
+      <div className="w-full max-w-sm p-8 bg-white dark:bg-gray-900 rounded-none md:rounded-2xl border border-gray-100 dark:border-gray-800 shadow-xl">
+        <h2 className="text-xl font-medium text-gray-900 dark:text-white mb-8 text-center tracking-tight">
+          Restricted Access
         </h2>
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-6">
           <div>
-            <label
-              htmlFor="password"
-              className="block text-sm font-medium text-gray-300 mb-2"
-            >
-              Enter Password
-            </label>
             <input
               id="password"
               type="password"
@@ -55,20 +49,20 @@ export default function PasswordPrompt({ onSuccess }: PasswordPromptProps) {
                 setPassword(e.target.value)
                 setError('')
               }}
-              className="w-full px-4 py-2 bg-cosmic-darker border border-cosmic-green/20 rounded-lg text-white focus:outline-none focus:border-cosmic-green focus:ring-1 focus:ring-cosmic-green"
-              placeholder="Password"
+              className="w-full px-0 py-2 bg-transparent border-b border-gray-200 dark:border-gray-800 text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:border-black dark:focus:border-white transition-colors text-sm"
+              placeholder="Enter Passcode"
               autoFocus
             />
           </div>
           {error && (
-            <p className="text-red-400 text-sm text-center">{error}</p>
+            <p className="text-red-500 text-xs text-center font-medium bg-red-50 dark:bg-red-900/10 py-2">{error}</p>
           )}
           <button
             type="submit"
             disabled={isLoading || !password}
-            className="w-full py-2 px-4 bg-cosmic-green text-cosmic-darker font-semibold rounded-lg hover:bg-cosmic-green/80 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            className="w-full py-3 bg-black dark:bg-white text-white dark:text-black font-medium text-sm rounded-lg hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed uppercase tracking-wide"
           >
-            {isLoading ? 'Verifying...' : 'Access Secret Globe'}
+            {isLoading ? 'Verifying...' : 'Access Collection'}
           </button>
         </form>
       </div>

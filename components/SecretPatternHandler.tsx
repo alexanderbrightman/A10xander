@@ -18,7 +18,7 @@ export default function SecretPatternHandler() {
     const handleClick = (e: MouseEvent) => {
       // Only detect clicks on background, not on interactive elements
       const target = e.target as HTMLElement
-      
+
       // Ignore clicks on interactive elements
       if (
         target.closest('canvas') ||
@@ -33,9 +33,10 @@ export default function SecretPatternHandler() {
         return
       }
 
-      // Only process clicks on the background div (cosmic-bg)
-      if (!target.classList.contains('cosmic-bg') && !target.closest('.cosmic-bg')) {
-        return
+      // Process clicks on the document body/background
+      // We rely on the interactive element check above to filter out UI clicks
+      if (target !== document.body && target.parentElement !== document.body && !target.classList.contains('absolute')) {
+        // Optionally restrict further if needed, but the exclusion list above is robust
       }
 
       const now = Date.now()
@@ -94,7 +95,7 @@ export default function SecretPatternHandler() {
 
     // Add event listeners
     document.addEventListener('click', handleClick, true) // Use capture phase
-    
+
     // Also handle touch events
     const handleTouchEnd = (e: TouchEvent) => {
       const target = e.target as HTMLElement
@@ -110,12 +111,11 @@ export default function SecretPatternHandler() {
       ) {
         return
       }
-      if (!target.classList.contains('cosmic-bg') && !target.closest('.cosmic-bg')) {
-        return
-      }
+      // Reusing logic
+
       handleClick(e as any) // Reuse the same logic
     }
-    
+
     document.addEventListener('touchend', handleTouchEnd, true)
 
     return () => {

@@ -41,6 +41,7 @@ export type Database = {
           type: 'image' | 'video' | 'text'
           url: string
           created_at: string
+          order: number | null
         }
         Insert: {
           id?: string
@@ -48,6 +49,7 @@ export type Database = {
           type: 'image' | 'video' | 'text'
           url: string
           created_at?: string
+          order?: number | null
         }
         Update: {
           id?: string
@@ -55,6 +57,7 @@ export type Database = {
           type?: 'image' | 'video' | 'text'
           url?: string
           created_at?: string
+          order?: number | null
         }
       }
       settings: {

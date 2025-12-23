@@ -7,25 +7,24 @@ import AdminUploader from '@/components/AdminUploader'
 import type { Database } from '@/lib/supabase'
 
 type Post = Database['public']['Tables']['posts']['Row']
-type Media = Database['public']['Tables']['media']['Row']
 
 export default function AdminDashboard() {
   const router = useRouter()
   const [posts, setPosts] = useState<(Post & { media_count: number })[]>([])
   const [loading, setLoading] = useState(true)
   const [isAuthorized, setIsAuthorized] = useState(false)
+  const [editingPost, setEditingPost] = useState<Post | null>(null)
 
   useEffect(() => {
     async function checkAuth() {
       console.log('Admin page - Starting auth check')
       console.log('Admin page - Current URL:', window.location.href)
-      
+
       const supabase = createBrowserClient()
-      
-      // First check session
+
       const { data: sessionData, error: sessionError } = await supabase.auth.getSession()
       console.log('Admin page - Session check:', { session: sessionData?.session?.user?.id, error: sessionError })
-      
+
       const {
         data: { user },
         error,
@@ -35,31 +34,26 @@ export default function AdminDashboard() {
 
       if (error) {
         console.error('Admin page - Auth error:', error)
-        console.log('Admin page - Redirecting to home due to auth error')
         router.push('/')
         return
       }
 
       if (!user) {
         console.log('Admin page - No user found')
-        console.log('Admin page - Redirecting to home due to no user')
         router.push('/')
         return
       }
 
       console.log('Admin page - User ID:', user.id)
-      console.log('Admin page - Expected admin ID:', 'df74d913-f481-48d9-b23d-d9469fb346e2')
-      console.log('Admin page - UUIDs match:', user.id === 'df74d913-f481-48d9-b23d-d9469fb346e2')
 
       if (user.id !== 'df74d913-f481-48d9-b23d-d9469fb346e2') {
         console.error('Admin page - Unauthorized user:', user.id)
-        alert(`Unauthorized. Your user ID (${user.id}) does not match the admin ID. Please check your Supabase account UUID.`)
-        console.log('Admin page - Redirecting to home due to UUID mismatch')
+        alert(`Unauthorized. Your user ID (${user.id}) does not match the admin ID.`)
         router.push('/')
         return
       }
 
-      console.log('Admin page - Authorization successful, loading dashboard')
+      console.log('Admin page - Authorization successful')
       setIsAuthorized(true)
       await loadPosts()
     }
@@ -77,7 +71,6 @@ export default function AdminDashboard() {
     if (error) {
       console.error('Error loading posts:', error)
     } else {
-      // Get media count for each post
       const postsWithCount = await Promise.all(
         (data || []).map(async (post: Post) => {
           const { count } = await supabase
@@ -98,11 +91,7 @@ export default function AdminDashboard() {
     }
 
     const supabase = createBrowserClient()
-    
-    // Delete media first (cascade should handle this, but being explicit)
     await supabase.from('media').delete().eq('post_id', postId)
-    
-    // Delete post
     const { error } = await supabase.from('posts').delete().eq('id', postId)
 
     if (error) {
@@ -113,6 +102,15 @@ export default function AdminDashboard() {
     }
   }
 
+  function handleEdit(post: Post) {
+    setEditingPost(post)
+  }
+
+  function handleEditComplete() {
+    setEditingPost(null)
+    loadPosts()
+  }
+
   async function handleLogout() {
     const supabase = createBrowserClient()
     await supabase.auth.signOut()
@@ -121,90 +119,97 @@ export default function AdminDashboard() {
 
   if (!isAuthorized) {
     return (
-      <div className="flex items-center justify-center min-h-screen cosmic-bg">
-        <div className="text-cosmic-green animate-pulse">Verifying access...</div>
+      <div className="flex items-center justify-center min-h-screen bg-white dark:bg-black">
+        <div className="w-1 h-1 bg-black dark:bg-white rounded-full animate-ping"></div>
       </div>
     )
   }
 
   return (
-    <div className="min-h-screen cosmic-bg">
-      <div className="container mx-auto py-8">
-        <div className="flex justify-between items-center mb-8">
-          <h1 className="text-4xl font-bold text-cosmic-green">Admin Dashboard</h1>
+    <div className="min-h-screen bg-white dark:bg-black text-gray-900 dark:text-gray-100 p-8">
+      <div className="max-w-6xl mx-auto">
+        <div className="flex justify-between items-center mb-12 border-b border-gray-200 dark:border-gray-800 pb-4">
+          <h1 className="text-xl font-light tracking-wide uppercase">Admin Dashboard</h1>
           <button
             onClick={handleLogout}
-            className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
+            className="text-xs uppercase tracking-widest text-gray-400 hover:text-red-500 transition-colors"
           >
             Logout
           </button>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Upload Section */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
+          {/* Upload / Edit Section */}
           <div className="lg:col-span-2">
-            <AdminUploader />
+            <AdminUploader
+              editingPost={editingPost}
+              onEditComplete={handleEditComplete}
+            />
           </div>
 
           {/* Posts List */}
-          <div className="lg:col-span-1">
-            <div className="bg-cosmic-blue rounded-lg border border-cosmic-green/20 p-6">
-              <h2 className="text-2xl font-bold text-cosmic-green mb-4">
-                All Posts ({posts.length})
-              </h2>
+          <div className="lg:col-span-1 border-t lg:border-t-0 lg:border-l border-gray-200 dark:border-gray-800 pt-8 lg:pl-8 lg:pt-0">
+            <h2 className="text-sm uppercase tracking-widest text-gray-500 mb-8">
+              All Posts ({posts.length})
+            </h2>
 
-              {loading ? (
-                <div className="text-cosmic-green animate-pulse">Loading posts...</div>
-              ) : posts.length === 0 ? (
-                <p className="text-gray-400">No posts yet.</p>
-              ) : (
-                <div className="space-y-4 max-h-[600px] overflow-y-auto">
-                  {posts.map((post) => (
-                    <div
-                      key={post.id}
-                      className="bg-cosmic-darker rounded-lg border border-cosmic-green/10 p-4"
-                    >
-                      <div className="flex justify-between items-start mb-2">
-                        <div className="flex-1">
-                          <h3 className="font-semibold text-white">
-                            {post.title || 'Untitled'}
-                          </h3>
-                          <p className="text-xs text-gray-400 mt-1">
-                            {new Date(post.created_at).toLocaleDateString()}
-                          </p>
-                          <p className="text-xs text-cosmic-green mt-1">
-                            {post.lat.toFixed(4)}, {post.lng.toFixed(4)}
-                          </p>
-                          {post.is_secret && (
-                            <span className="inline-block mt-1 px-2 py-0.5 text-xs bg-yellow-900/30 text-yellow-400 rounded">
-                              Secret
-                            </span>
-                          )}
-                          <p className="text-xs text-gray-500 mt-1">
-                            {post.media_count} media
-                          </p>
-                        </div>
+            {loading ? (
+              <div className="text-xs text-gray-400 animate-pulse">Loading...</div>
+            ) : posts.length === 0 ? (
+              <p className="text-sm text-gray-400 italic">No posts yet.</p>
+            ) : (
+              <div className="space-y-6 max-h-[80vh] overflow-y-auto pr-2 scrollbar-hide">
+                {posts.map((post) => (
+                  <div
+                    key={post.id}
+                    className="group cursor-pointer"
+                    onClick={() => handleEdit(post)}
+                  >
+                    <div className="flex justify-between items-start mb-1">
+                      <div className="flex-1">
+                        <h3 className="text-sm font-medium group-hover:underline">
+                          {post.title || 'Untitled'}
+                        </h3>
+                        <p className="text-[10px] text-gray-400 mt-1 uppercase tracking-wider">
+                          {new Date(post.created_at).toLocaleDateString()}
+                        </p>
+                        {post.is_secret && (
+                          <span className="inline-block mt-1 text-[10px] text-gray-500 border border-gray-200 dark:border-gray-800 px-1 rounded-sm">
+                            Secret
+                          </span>
+                        )}
+                        <p className="text-[10px] text-gray-400 mt-1">
+                          {post.media_count} media
+                        </p>
+                      </div>
+                      <div className="flex flex-col gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                         <button
-                          onClick={() => handleDelete(post.id)}
-                          className="ml-2 px-2 py-1 text-xs bg-red-600 text-white rounded hover:bg-red-700 transition-colors"
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            handleEdit(post)
+                          }}
+                          className="text-[10px] text-blue-500 hover:underline"
+                        >
+                          Edit
+                        </button>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            handleDelete(post.id)
+                          }}
+                          className="text-[10px] text-red-500 hover:underline"
                         >
                           Delete
                         </button>
                       </div>
-                      {post.description && (
-                        <p className="text-sm text-gray-300 mt-2 line-clamp-2">
-                          {post.description}
-                        </p>
-                      )}
                     </div>
-                  ))}
-                </div>
-              )}
-            </div>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         </div>
       </div>
     </div>
   )
 }
-

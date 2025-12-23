@@ -16,7 +16,6 @@ interface PostModalProps {
 export default function PostModal({ post, onClose }: PostModalProps) {
   const [media, setMedia] = useState<Media[]>([])
   const [loading, setLoading] = useState(true)
-  const [sortOrder, setSortOrder] = useState<'newest' | 'oldest'>('newest')
 
   useEffect(() => {
     async function fetchMedia() {
@@ -25,7 +24,7 @@ export default function PostModal({ post, onClose }: PostModalProps) {
         .from('media')
         .select('*')
         .eq('post_id', post.id)
-        .order('created_at', { ascending: sortOrder === 'oldest' })
+        .order('order', { ascending: true })
 
       if (error) {
         console.error('Error fetching media:', error)
@@ -36,7 +35,7 @@ export default function PostModal({ post, onClose }: PostModalProps) {
     }
 
     fetchMedia()
-  }, [post.id, sortOrder])
+  }, [post.id])
 
   const handleBackdropClick = (e: React.MouseEvent) => {
     if (e.target === e.currentTarget) {
@@ -44,85 +43,86 @@ export default function PostModal({ post, onClose }: PostModalProps) {
     }
   }
 
+  // Separate text content from visual media
+  const visualMedia = media.filter(m => m.type === 'image' || m.type === 'video')
+  const textMedia = media.filter(m => m.type === 'text')
+
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm"
+      className="fixed inset-0 z-50 flex flex-col bg-black/95 backdrop-blur-md"
       onClick={handleBackdropClick}
     >
-      <div className="relative w-full max-w-4xl max-h-[90vh] bg-cosmic-blue rounded-lg shadow-2xl overflow-hidden border border-cosmic-green/20">
-        {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b border-cosmic-green/20">
-          <div>
-            <h2 className="text-2xl font-bold text-cosmic-green">{post.title || 'Untitled Post'}</h2>
-            {post.description && (
-              <p className="mt-2 text-gray-300">{post.description}</p>
-            )}
+      {/* Close Button */}
+      <button
+        onClick={onClose}
+        className="absolute top-6 right-6 z-10 p-2 text-white/60 hover:text-white transition-colors"
+      >
+        <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+          <line x1="18" y1="6" x2="6" y2="18"></line>
+          <line x1="6" y1="6" x2="18" y2="18"></line>
+        </svg>
+      </button>
+
+      {/* Header - Title and Description */}
+      <div className="shrink-0 px-6 pt-6 pb-4">
+        <h2 className="text-2xl md:text-3xl font-light tracking-tight text-white">{post.title || 'Untitled'}</h2>
+        {post.description && (
+          <p className="mt-2 text-white/50 font-light text-sm md:text-base max-w-2xl">{post.description}</p>
+        )}
+      </div>
+
+      {/* Media Gallery - Horizontal Scroll */}
+      <div className="flex-1 flex items-center overflow-hidden">
+        {loading ? (
+          <div className="flex items-center justify-center w-full">
+            <div className="w-1 h-1 bg-white rounded-full animate-ping"></div>
           </div>
-          <button
-            onClick={onClose}
-            className="text-gray-400 hover:text-cosmic-green transition-colors text-2xl"
-          >
-            ×
-          </button>
-        </div>
-
-        {/* Sort Toggle */}
-        <div className="px-6 py-4 border-b border-cosmic-green/10">
-          <button
-            onClick={() => setSortOrder(sortOrder === 'newest' ? 'oldest' : 'newest')}
-            className="text-sm text-cosmic-green hover:text-cosmic-green/80 transition-colors"
-          >
-            Sort: {sortOrder === 'newest' ? 'Newest ↔ Oldest' : 'Oldest ↔ Newest'}
-          </button>
-        </div>
-
-        {/* Media Gallery */}
-        <div className="overflow-y-auto max-h-[calc(90vh-200px)] p-6">
-          {loading ? (
-            <div className="flex items-center justify-center py-12">
-              <div className="text-cosmic-green animate-pulse">Loading media...</div>
-            </div>
-          ) : media.length === 0 ? (
-            <div className="flex items-center justify-center py-12">
-              <p className="text-gray-400">No media found for this location.</p>
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {media.map((item) => (
+        ) : visualMedia.length === 0 && textMedia.length === 0 ? (
+          <div className="flex items-center justify-center w-full">
+            <p className="text-white/30 font-light italic">Empty</p>
+          </div>
+        ) : (
+          <div className="w-full h-full overflow-x-auto overflow-y-hidden scrollbar-hide">
+            <div className="flex items-center h-full gap-4 px-6 min-w-min">
+              {visualMedia.map((item) => (
                 <div
                   key={item.id}
-                  className="bg-cosmic-darker rounded-lg overflow-hidden border border-cosmic-green/10"
+                  className="shrink-0 h-[80vh] flex items-center justify-center"
                 >
                   {item.type === 'image' && (
-                    <div className="relative w-full aspect-video">
-                      <Image
-                        src={item.url}
-                        alt={post.title || 'Post image'}
-                        fill
-                        className="object-cover"
-                        unoptimized
-                      />
-                    </div>
+                    <Image
+                      src={item.url}
+                      alt={post.title || 'Post image'}
+                      width={1920}
+                      height={1080}
+                      className="h-full w-auto max-w-[90vw] object-contain"
+                      unoptimized
+                    />
                   )}
                   {item.type === 'video' && (
                     <video
                       src={item.url}
                       controls
-                      className="w-full aspect-video object-cover"
+                      className="h-full w-auto max-w-[90vw] object-contain"
                     />
-                  )}
-                  {item.type === 'text' && (
-                    <div className="p-4">
-                      <p className="text-gray-300 whitespace-pre-wrap">{item.url}</p>
-                    </div>
                   )}
                 </div>
               ))}
             </div>
-          )}
-        </div>
+          </div>
+        )}
       </div>
+
+      {/* Text Content - Below Images */}
+      {textMedia.length > 0 && (
+        <div className="shrink-0 px-6 pb-6 pt-4 border-t border-white/10">
+          {textMedia.map((item) => (
+            <p key={item.id} className="text-white/80 whitespace-pre-wrap font-serif leading-loose text-lg max-w-2xl">
+              {item.url}
+            </p>
+          ))}
+        </div>
+      )}
     </div>
   )
 }
-
